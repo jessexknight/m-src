@@ -18,7 +18,8 @@
 %                Default: square as possible based on num. images, wider bias
 % 
 %    minmax    - minmax specification for contrast scaling, as in imshow(I,[]).
-%                array of size: 1 by 2, or a empty array: []
+%                array of size: 1 by 2, or a empty array: []. Applies to all
+%                images equally.
 %                Default: []
 % 
 %    colourmap - colourmap used for displaying images:
@@ -39,7 +40,7 @@
 %                with 0.5% of total figure size padded between, and arranged as
 %                close to square as possible.
 % 
-% Jesse Knight 2015
+% Jesse Knight 2016
 
 function [varargout] = timshow(varargin)
 [data] = parseargs(varargin);
@@ -102,12 +103,11 @@ end
 screensize = get(0,'screensize');
 aspect     = (size(data.img(1).data,1) / size(data.img(1).data,2));
 imgSize = min(800, (0.4*screensize(3)) / data.nSubx);
-set(gcf,'color','k');
-%,'position',...
-%    [(screensize(3) - (imgSize*data.nSubx))/2,... % Lower-left corner X
-%     (screensize(4) - (imgSize*data.nSuby))/2,... % Lower-left corner Y
-%     (imgSize*data.nSubx),...                     % Width in X
-%     (imgSize*data.nSuby*aspect)]);               % Width in Y
+set(gcf,'color','k','position',...
+   [(screensize(3) - (imgSize*data.nSubx))/2,... % Lower-left corner X
+    (screensize(4) - (imgSize*data.nSuby))/2,... % Lower-left corner Y
+    (imgSize*data.nSubx),...                     % Width in X
+    (imgSize*data.nSuby*aspect)]);               % Width in Y
  
 function [data] = showims(data)
 % show the images in default subplot locations
@@ -115,7 +115,7 @@ for i = 1:data.N
     imshow(data.img(i).data,data.minmax,'parent',data.ax(i));
 end
 % set the positions of the axes
-% (must be done after due to disappearing images if they overlap)
+% (must be done after due to axes disappearing if they overlap)
 for i = 1:data.N
     y = ceil(i / data.nSubx);
     x = mod(i, data.nSubx);

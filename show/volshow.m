@@ -15,51 +15,57 @@
 %                * if using colour volumes, the colour channels should be the
 %                  last dimension.
 % 
+%    padval    - decimal value on the interval (0, 0.5) dictating the relative
+%                padded spacing between images.
+%                Default: 0.005
+% 
+%    gridstr   - string like "5x2", specifying the number of axes to tile
+%                horizontally (5) and vertically (2)
+%                Default: as square as possible, wider bias
+% 
+%    minmax    - minmax specification for contrast scaling, as in imshow(I,[]).
+%                array of size: 1 by 2, or a empty array: []. Applies to all
+%                volumes equally.
+%                Default: []
+% 
+%    colourmap - colourmap used for displaying images:
+%                array of size M by 3, or a colourmap function
+%                Default: curent default figure colormap
+% 
 %    patchfcn  - user specified function which accepts some data and plots
-%                some result from it. Function should take the form:
-%                Accepts: [axes handle, minmax, varargin{:} = patchdata]
-%                         patchdata order are: clicked axes, all others.
+%                some result from it after a double click in any of the axes.
+%                Function should take the form:
+%                function [] = patchfcn(ax, minmax, patchdata)
+%                Inputs:  ax        - handle to the last unused axes
+%                         minmax    - cell array of minmax for all image axes.
+%                         patchdata - cell array of image data corresponding
+%                                     to the clicked patch (from all axes).
+%                         patchdata, mimax orders: {clicked axes, all others}.
 %                Outputs: None required, but presumably plotting on the axes.
 %                Default: None
 % 
 %    patchsize - size of the patch data passed to patchfcn
 %                Default: [15, 15, 1]
 % 
-%    padval    - decimal value on the interval (0, 0.5) dictating the relative
-%                padded spacing between images.
-%                Default: 0.005
-% 
-%    gridstr   - string like "5x2", specifying the number of images to tile
-%                horizontally (5) and vertically (2)
-%                Default: as square as possible, wider bias
-% 
-%    minmax    - minmax specification for contrast scaling, as in imshow(I,[]).
-%                array of size: 1 by 2, or a empty array: []
-%                Default: []
-% 
-%    colourmap - colourmap used for displaying images:
-%                array of size: M by 3 or a colourmap function
-%                Default: curent default figure colormap
-% 
 %              * if 2+ non-image arguments are given, only the last one is used.
 % 
 % Examples:
 % 
-%    timshow(I1, I2, I3, I4, hot, 0, [0,1], '4x1');
+%    volshow(I1, I2, I3, I4, hot, 0, [0,1], '4x1');
 %                Show volumes I1, I2, I3, I4 using the hot colourmap, with no
 %                space between, contrast from 0 to 1, and in a horizontal line.
 % 
-%    timshow(DB(:).I);
+%    volshow(DB(:).I);
 %                Show all volume fields .I in the struct array DB using the
 %                default figure colourmap, automatic contrast scaling per image,
 %                with 0.5% of total figure size padded between, and arranged as
 %                close to square as possible.
 % 
-% Jesse Knight 2015
+% Jesse Knight 2016
 
 function varargout = volshow(varargin)
 % -- do not edit: MATLAB GUIDE 
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
     'gui_OpeningFcn', @volshow_OpeningFcn, ...
@@ -83,7 +89,7 @@ handles.output  = hObject;
 handles.badcall = 0;
 set(0,'defaultTextFontName','Courier New');
 
-%try % if any errors: abort and give invalid input warning
+try % if any errors: abort and give error (to ensure GUI closes)
     % default values
     handles.img       = [];
     handles.minmax    = [];
@@ -104,7 +110,7 @@ set(0,'defaultTextFontName','Courier New');
             handles.img(end).textpos = [round(handles.img(end).size(1)/20 + 1),...
                                         round(handles.img(end).size(2)/20 + 1)];
         
-        % gridstr
+        % grid specification string
         elseif ischar(varargin{v}) && numel(sscanf(varargin{v},'%dx%d')) == 2
             xy = sscanf(varargin{v},'%dx%d');
             handles.nSubx = xy(1);
@@ -115,7 +121,7 @@ set(0,'defaultTextFontName','Courier New');
         % patch size for the click
         elseif all(sizev == [1,3]) || all(sizev == [3,1])
             handles.patchsize = varargin{v};
-        % padval
+        % pad value
         elseif all(sizev == [1,1])
             handles.pad = varargin{v};
         % minmax ([])
@@ -135,10 +141,15 @@ set(0,'defaultTextFontName','Courier New');
     % optimize display grid square-ish if not user specified
     handles.N = numel(handles.img) + ~isempty(handles.patchfcn);
     if ~all(isfield(handles,{'nSubx','nSuby'}))
+      if handles.N ~= 3
         handles.nSubx = ceil(sqrt(handles.N));
         handles.nSuby = ceil(handles.N/handles.nSubx);
+      else % special case for 3 - just looks better
+        handles.nSubx = 3;
+        handles.nSuby = 1;
+      end
     end
-    % defining per-image minmax's
+    % defining per-image minmaxs
     for n = 1:numel(handles.img)
       if isempty(handles.minmax)
         handles.img(n).minmax = [min(handles.img(n).data(:)),...
@@ -181,9 +192,8 @@ set(0,'defaultTextFontName','Courier New');
     % render the middle frame of each volume to start
     imupdate(handles);
 % input argument parsing failed: exit (could be more graceful)
-try
 catch
-    warning('Error using input arguments.');
+    warning('Error during initialization. Maybe bad arguments.');
     handles.badcall = 1;
 end
 
@@ -221,7 +231,7 @@ for i = 1:numel(handles.img)
     ha = imshow(squeeze(handles.img(i).data(:,:,handles.img(i).frame,:)),...
                 handles.img(i).minmax,'parent',handles.ax(i));
     set(ha,'ButtonDownFcn',{@clickfcn,handles});
-    % print the current frame number in the top left corner
+    % print the current frame number in the top left corner (red)
     text(handles.img(i).textpos(2),handles.img(i).textpos(1),...
         num2str(handles.img(i).frame),'color','r','parent',handles.ax(i));
 end
@@ -233,6 +243,7 @@ function clickfcn(hObject, ~, handles)
 if isempty(handles.patchfcn)  
     return
 end
+% yes ...
 % determine calling axes
 for i = 1:numel(handles.img)
     if get(hObject,'Parent') == handles.ax(i)
@@ -254,15 +265,18 @@ zz = floor(max(1,        z - handles.patchsize(3)/2)) : ...
 minmaxes{1} = highlightpatch(hObject,yy,xx,img.minmax);
 drawnow;
 % gather the patch data (might be 3D)
-patches{1} = img.data(yy,xx,zz);
+patches{1} = img.data(yy,xx,zz,:);
 for i = 1:numel(handles.img)
     if get(hObject,'Parent') ~= handles.ax(i)
-        patches{end+1}  = handles.img(i).data(yy,xx,zz);
+        patches{end+1}  = handles.img(i).data(yy,xx,zz,:);
         minmaxes{end+1} = handles.img(i).minmax;
     end
 end
-% call the user-specified function
-handles.patchfcn(handles.ax(end), minmaxes, patches);
+% try calling the user-specified function
+try
+  handles.patchfcn(handles.ax(end), minmaxes, patches);
+end
+% restore the images without patch highlighting
 imupdate(handles);
 
 % --- called by clickfcn to show the user where they've clicked
@@ -274,9 +288,9 @@ if isempty(minmax)
   minmax = [min(I2(:)),max(I2(:))];
 end
 % paint the whole box bright
-I2(yy,xx) = minmax(2);
+I2(yy,xx,:) = minmax(2);
 % paint an inner box dark
-I2(yy(2:end-1),xx(2:end-1)) = minmax(1);
+I2(yy(2:end-1),xx(2:end-1),:) = minmax(1);
 % refresh the frame data
 set(ax,'CData',I2);
 

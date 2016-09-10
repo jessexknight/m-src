@@ -1,2 +1,0 @@
-function [] = centreofmass(BW)
-

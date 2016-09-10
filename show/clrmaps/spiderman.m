@@ -1,4 +1,5 @@
 function [cmap] = spiderman(m)
+% colormap: blue-black-red (for difference images)
 if nargin < 1
    m = size(get(gcf,'colormap'),1);
 end

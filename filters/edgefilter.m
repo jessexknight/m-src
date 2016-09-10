@@ -1,4 +1,4 @@
-function [E] = edgefilter(I,varargin)
+function [EM,E] = edgefilter(I,varargin)
 idim = numel(size(I));
 [type,kdim] = parseinputs(varargin,idim);
 
@@ -15,10 +15,10 @@ end
 switch idim
   case 2
     % 2D components
-    E1 = imfilter(I,K, 'replicate');
-    E2 = imfilter(I,K','replicate');
+    E{1} = imfilter(I,K, 'replicate');
+    E{2} = imfilter(I,K','replicate');
     % magnitude
-    E = cast(sqrt(double(E1).^2 + double(E2).^2),class(I));
+    EM = cast(sqrt(double(E{1}).^2 + double(E{2}).^2),class(I));
   case 3
     % 3D components (may still have 2D kernel)
     K3{1} = shiftdim(K,0);
@@ -28,7 +28,7 @@ switch idim
       E{e} = imfilter(I,K3{e},'replicate');
     end
     % magnitude
-    E = cast(sqrt(double(E{1}).^2 + double(E{2}).^2 + double(E{3}).^2),class(I));
+    EM = cast(sqrt(double(E{1}).^2 + double(E{2}).^2 + double(E{3}).^2),class(I));
   otherwise
     error('Image must be 2D or 3D.');
 end
@@ -36,7 +36,7 @@ end
 function [type,kdim] = parseinputs(vargs,idim)
 % defaults
 kdim = idim;
-type = 'sobel';
+type = 'diff';
 % user inputs
 for v = 1:numel(vargs)
   if isa(vargs{v},'numeric');
