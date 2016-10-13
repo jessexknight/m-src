@@ -275,6 +275,8 @@ end
 % try calling the user-specified function
 try
   handles.patchfcn(handles.ax(end), minmaxes, patches);
+catch ME
+  warning(['@patchfcn failed.',10,10,ME.getReport]);
 end
 % restore the images without patch highlighting
 imupdate(handles);
@@ -288,9 +290,11 @@ if isempty(minmax)
   minmax = [min(I2(:)),max(I2(:))];
 end
 % paint the whole box bright
+I2o = I2(yy(2:end-1),xx(2:end-1),:);
 I2(yy,xx,:) = minmax(2);
 % paint an inner box dark
-I2(yy(2:end-1),xx(2:end-1),:) = minmax(1);
+%I2(yy(2:end-1),xx(2:end-1),:) = minmax(1);
+I2(yy(2:end-1),xx(2:end-1),:) = I2o;
 % refresh the frame data
 set(ax,'CData',I2);
 
