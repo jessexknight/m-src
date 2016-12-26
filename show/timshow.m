@@ -102,7 +102,7 @@ end
 % centres the figure in onscreen too.
 screensize = get(0,'screensize');
 aspect     = (size(data.img(1).data,1) / size(data.img(1).data,2));
-imgSize = min(800, (0.6*screensize(3)) / data.nSubx);
+imgSize    = min(800, (0.6*screensize(3)) / data.nSubx);
 set(gcf,'color','k','position',...
    [(screensize(3) - (       imgSize*data.nSubx))/2,... % Lower-left corner X
     (screensize(4) - (aspect*imgSize*data.nSuby))/2,... % Lower-left corner Y

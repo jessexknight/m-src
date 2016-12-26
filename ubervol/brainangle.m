@@ -28,3 +28,4 @@ sim = -corr2(brain,fliplr(imrotate(brain,theta,'bilinear','crop')));
 
 
 
+

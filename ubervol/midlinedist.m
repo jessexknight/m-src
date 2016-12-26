@@ -1,6 +1,6 @@
 function [D] = midlinedist(brain,vsize)
 % calculating brain angle and centroid
-[theta] = brainangle(brain);
+[theta] = brainangle(brain)
 [cen]   = centroid(brain);
 [N]     = planenorm(theta);
 % make grid of normalized coordinates

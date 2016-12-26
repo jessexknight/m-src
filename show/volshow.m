@@ -183,12 +183,12 @@ try % if any errors: abort and give error (to ensure GUI closes)
     % centres the figure in onscreen too.
     screensize = get(0,'screensize');
     aspect     = (size(handles.img(1).data,1) / size(handles.img(1).data,2));
-    imgSize = min(800, (0.4*screensize(3)) / handles.nSubx);
+    imgSize = min(800, (0.6*screensize(3)) / handles.nSubx);
     set(gcf,'color','k','position',...
         [(screensize(3) - (imgSize*handles.nSubx))/2,...
          (screensize(4) - (imgSize*handles.nSuby))/2,...
          (imgSize*handles.nSubx),...
-         (imgSize*handles.nSuby*aspect)]);
+         (imgSize*handles.nSuby*aspect)]);  
     % render the middle frame of each volume to start
     imupdate(handles);
 % input argument parsing failed: exit (could be more graceful)
@@ -207,7 +207,7 @@ if handles.badcall
 end
 
 % --- Executes on scroll wheel click while the figure is in focus.
-function figure1_WindowScrollWheelFcn(hObject, eventdata, handles)
+function volshow_WindowScrollWheelFcn(hObject, eventdata, handles)
 % for all volumes
 for i = 1:numel(handles.img)
     % adjust the frame index by the scroll count
@@ -298,6 +298,6 @@ I2(yy(2:end-1),xx(2:end-1),:) = I2o;
 % refresh the frame data
 set(ax,'CData',I2);
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% --- Executes when user attempts to close volshow.
+function volshow_CloseRequestFcn(hObject, eventdata, handles)
 delete(hObject);

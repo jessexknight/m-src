@@ -1,4 +1,4 @@
-% [pYW,U] = pofwy(Y,X,op,varargin)
+% [pYW,U] = pofwy(Y,X,varargin)
 % 
 % POFWY is a weighted histogram (normalized for unit norm).
 %   This implementation uses a relatively fast data-removal technique.
@@ -33,4 +33,4 @@ for u = 1:numel(U)
   YU(idx) = [];          % *
   W(idx)  = [];          % *
 end
-pYW = pYW./sum(W(:)); % normalization by sum of weights
+pYW = pYW./sum(Y(:)); % normalization by sum of weights

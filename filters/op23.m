@@ -1,4 +1,4 @@
-function [IF] = filter3(I,filtfcn,W)
+function [IF] = op23(I,filtfcn,W)
 i3size = size(I);
 ipsize = i3size + [0,2*W,0];
 i2size = [ipsize(1),ipsize(2)*ipsize(3)];

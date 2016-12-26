@@ -9,8 +9,9 @@ format compact;
 %fontname = 'Helvetica';
 fontname = 'CMU Concrete';
 %fontname = 'Times';
-%fontsize = 22;
 fontsize = 18;
+%fontsize = 22;
+%fontsize = 30;
 
 set(0,'defaultTextFontName',      fontname);
 set(0,'defaultAxesFontName',      fontname);
@@ -25,10 +26,12 @@ set(0,'defaultUitableFontSize',   fontsize);
 set(0,'defaultUipanelFontSize',   fontsize);
 
 % PLOT LINE THICKNESS
-set(0,'defaultLineLineWidth', 3);
+set(0,'defaultLineLineWidth', 2);
 % PLOT COLORS (RAINBOW)
 %set(0,'defaultAxesColorOrder',jet(20));
 set(0,'defaultAxesColorOrder',jkcolororder);
+% PDF SAVING SPECS
+set(0,'defaultfigurepaperpositionmode','auto');
 % IMG COLORS (RAINBOW)
 set(0,'defaultFigureColormap',gray);
 %set(0,'defaultFigureColormap',rainbow);
@@ -36,21 +39,25 @@ set(0,'defaultFigureColormap',gray);
 set(0,'defaultFigureColor',[1,1,1]);
 % WARNINGS
 warning('off', 'Images:initSize:adjustingMag');
+warning('off', 'Images:imshow:magnificationMustBeFitForDockedFigure');
+warning('off', 'MATLAB:hg:transform:computeTransform:AxesLimitsTooLarge1');
+warning('off', 'stats:kmeans:EmptyCluster');
 close all;
 
 
 
 function [clrs] = jkcolororder()
 clrs = ...
-  [0.5, 0.5, 0.5;
-   1.0, 0.2, 0.2];
-%    [0.00    0.50    1.00
-%     0.50    0.00    1.00
-%     0.75    0.00    0.75
-%     1.00    0.00    0.50
-%     1.00    0.00    0.00
-%     1.00    0.25    0.00
-%     1.00    0.50    0.00
-%     1.00    0.90    0.00
-%     0.25    1.00    0.25
-%     0.00    0.90    0.60];
+   [0.00    0.50    1.00
+    0.50    0.00    1.00
+    0.75    0.00    0.75
+    1.00    0.00    0.50
+    1.00    0.00    0.00
+    1.00    0.25    0.00
+    1.00    0.50    0.00
+    1.00    0.90    0.00
+    0.25    1.00    0.25
+    0.00    0.90    0.60];
+%   [0.5, 0.5, 0.5;
+%    1.0, 0.2, 0.2];
+  

@@ -23,6 +23,7 @@
 % Jesse Knight 2016
 
 function [pXY,pY,U] = pofxy(Y,X,op,varargin)
+assert(strcmp(class(Y),class(X)),'Class of Y and X must match.');
 % bin the data for easy lookup
 [YU,U] = biny(Y,varargin{:});
 % sort the data for faster lookup of paired data
