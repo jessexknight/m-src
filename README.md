@@ -1,39 +1,23 @@
-# MATLAB Utils
-Some MATLAB functions I've written for general use, focusing on image processing, especially for 3D images.
+## MATLAB Image Processing Utils
 
-## Overview 
+Some helpful functions for image processing in MATLAB, all documented for `help <function>`:
 
-`src`:  contains files used during development and compilation
-- `\py`: python class files and `main` file.
-- `\templates`: template html snippits populated using `__example__`-style keywords
-- `\content`: json "objects" which provide different content for each template
-- `\pages`: main pages for the site
+ * `show/` Tools for displaying multiple 2D and 3D images quickly
+ * `ndops/` N-Dimensional generalizations of some operations
+ * `wprob/` Weighted probability operations & histograms (N-D too)
+ * `utils/` Miscelaneous functions
 
-`live`: contains all files necessary to launch the website:
-- `\pages`: written by `main.py`
-- `\docs`: all documents (e.g. PDFs) linked from the site
-- `\img`: all images
+##### Worth Noting:
 
-### Main file
-`main.py`: the main file for generating all website pages automatically -- usage: `python main.py`
+* `show / timshow.m` "tight imshow" - Show any number of 2D images with control over colormaps, spacing, and linear contrast.
+* `show / volshow.m` "volume show" - Same, for 3D images, plus mouse wheel scrolling slices.
+* `utils / biny` "bin y" - re-bin data with control over # levels and input / output limits.
+* `utils / rdir` "recursive dir" - drill down any dir and return full pathnames to all files.
 
-## To Do
+##### Check out also:
 
-#### General
-- [x] refactor entire code as OO
-- [x] sticky menu for long content
-- [x] live links need to be relative
-- [ ] put back awards page / transcripts (hide under sample work?)
-- [ ] documentation of python
-- [x] add command line option for "dev" mode: local links
-- [x] add more sample work: ML course, poster
+* [Patchline](https://www.mathworks.com/matlabcentral/fileexchange/36953-patchline) - plotting lines as patches (control transparency)
+* [Nifti & Analyze Tools](https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) - reading & writing these medical image formats
+* [Anti-Aliasing Figures](https://www.mathworks.com/matlabcentral/fileexchange/20979-myaa-my-anti-alias-for-matlab) - print raster images with much less pixelation
 
-#### Mini-Projects
-- [ ] Two templates: mini box and full page w. publications
-- [ ] Develop sub-page framework
 
-#### Abandoned
-- [x] fix `<pre>` double lines in code
-- [x] finish refactoring OO for Code pages - git instead
-- [x] package same name .m/other files into zip for download - same as above
-- [x] hidden menu in small screens - hamburgers are stupid
