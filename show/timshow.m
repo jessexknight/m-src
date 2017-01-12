@@ -3,15 +3,15 @@
 %         and colourmaps can be specified. Attributes apply to all images. Best
 %         results with same sized images. Grayscale or colour images.
 % 
-% Input arguments: (any order, no string names required, just arguments)
+% Input: (any order, all optional except at least one image)
 %    image(s)  - any number of 2D grayscale or colour images. Rendered in the
 %                order they are presented, top to bottom, left to right. 
 %                * The x-dimension of any image should not have a size of 3,
 %                  else it will be confused for a colourmap.
 % 
-%    padval    - decimal value on the interval (0, 0.5) dictating the relative
-%                padded spacing between images.
-%                Default: 0.005
+%    padval    - decimal value on the interval (0, 0.5) dictating the padded
+%                spacing between images (relative to figure size).
+%                Default: 0.005 (0.5%)
 % 
 %    gridstr   - string like "5x2", specifying the number of images to tile
 %                horizontally (5) and vertically (2)
@@ -20,7 +20,7 @@
 %    minmax    - minmax specification for contrast scaling, as in imshow(I,[]).
 %                array of size: 1 by 2, or a empty array: []. Applies to all
 %                images equally.
-%                Default: []
+%                Default: [] (image-adaptive)
 % 
 %    colourmap - colourmap used for displaying images:
 %                array of size: M by 3 or a colourmap function
@@ -28,17 +28,20 @@
 % 
 %              * if 2+ non-image arguments are given, only the last one is used.
 % 
+% Output arguments: 
+%    axes      - handles to all subplot axes.
+%                * only returned on nargout == 1
+% 
 % Examples:
+% 
+%    timshow(randn(10,10));
+%                Show a random 10x10 image of data with the default figure
+%                colourmap, automatic contrast scaling, with 0.5% of total
+%                figure size padded around.
 % 
 %    timshow(I1, I2, I3, I4, hot, 0, [0,1], '4x1');
 %                Show images I1, I2, I3, I4 using the hot colourmap, with no
 %                space between, contrast from 0 to 1, and in a horizontal line.
-% 
-%    timshow(DB(:).I);
-%                Show all image fields .I in the struct array DB using the
-%                default figure colourmap, automatic contrast scaling per image,
-%                with 0.5% of total figure size padded between, and arranged as
-%                close to square as possible.
 % 
 % Jesse Knight 2016
 
@@ -86,13 +89,19 @@ for v = 1:numel(vargs)
         warning(['Ignoring argument number ',num2str(v),'.']);
     end
 end
+assert(size(data.img,1) ~= 0,'Must give at least one image.');
 
 function [data] = initaxes(data)
 % optimize display grid square-ish if not user specified
 data.N = numel(data.img);
 if ~all(isfield(data,{'nSubx','nSuby'}))
+  if data.N ~= 3
     data.nSubx = ceil(sqrt(data.N));
     data.nSuby = ceil(data.N/data.nSubx);
+  else % special case for 3: horizontal line - less awkward
+    data.nSubx = 3;
+    data.nSuby = 1;
+  end
 end
 % subplot handles initialization
 for a = 1:data.N
@@ -114,8 +123,7 @@ function [data] = showims(data)
 for i = 1:data.N
     imshow(data.img(i).data,data.minmax,'parent',data.ax(i));
 end
-% set the positions of the axes
-% (must be done after due to axes disappearing if they overlap)
+% subplot spacing (separate loop since otherwise axes die if they overlap)
 for i = 1:data.N
     y = ceil(i / data.nSubx);
     x = mod(i, data.nSubx);

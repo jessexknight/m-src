@@ -1,23 +1,22 @@
-% VOLSHOW is a flexible debugging tool for displaying multiple volumes tightly
-%         on the same figure. Mouse scroll wheel scrolls the z dimension.
+% VOLSHOW is a flexible tool for displaying multiple image volumes quickly
+%         on the same figure. Mouse scroll wheel scrolls the z (3rd) dimension.
 %         Padding between images, grid dimensions, contrast scale, and
 %         colourmaps can be specified. Attributes apply to all images. Best
-%         results with same sized images. Grayscale or colour images. A
-%         user-supplied click function can also be linked, with option to
-%         plot some resulting data on an extra axes (e.g. local histogram)
+%         results with same sized volumes. Grayscale or colour (4rd dimension)
+%         images. A user-supplied 'click' function can also be supplied,
+%         to plot some near-click data on an extra axes (e.g. local histogram).
 % 
-% Input arguments: (any order)
+% Inputs: (any order, all optional except at least one image)
 %    images(s) - any number of 3D grayscale or colour images. Rendered in the
-%                order they are presented, top to bottom, left to right. 
+%                order they are presented, top to bottom, left to right.
 %                * The x-dimension of any image should not have a size of 3,
 %                  else it will be confused for a colourmap.
-%                * multiple volumes should have the same 3rd dimension.
 %                * if using colour volumes, the colour channels should be the
-%                  last dimension.
+%                  last (4th) dimension.
 % 
-%    padval    - decimal value on the interval (0, 0.5) dictating the relative
-%                padded spacing between images.
-%                Default: 0.005
+%    padval    - decimal value on the interval (0, 0.5) dictating the padded
+%                spacing between images (relative to figure size).
+%                Default: 0.005 (0.5%)
 % 
 %    gridstr   - string like "5x2", specifying the number of axes to tile
 %                horizontally (5) and vertically (2)
@@ -26,9 +25,9 @@
 %    minmax    - minmax specification for contrast scaling, as in imshow(I,[]).
 %                array of size: 1 by 2, or a empty array: []. Applies to all
 %                volumes equally.
-%                Default: []
+%                Default: [] (image-adaptive)
 % 
-%    colourmap - colourmap used for displaying images:
+%    colourmap - colourmap used for displaying non-color images:
 %                array of size M by 3, or a colourmap function
 %                Default: curent default figure colormap
 % 
@@ -44,27 +43,25 @@
 %                Outputs: None required, but presumably plotting on the axes.
 %                Default: None
 % 
-%    patchsize - size of the patch data passed to patchfcn
+%    patchsize - size of the patch data passed to patchfcn (size: 1 by 3)
 %                Default: [15, 15, 1]
 % 
 %              * if 2+ non-image arguments are given, only the last one is used.
 % 
 % Examples:
 % 
-%    volshow(I1, I2, I3, I4, hot, 0, [0,1], '4x1');
-%                Show volumes I1, I2, I3, I4 using the hot colourmap, with no
-%                space between, contrast from 0 to 1, and in a horizontal line.
+%    >> volshow(randn(10,10,10));
+%    Show a random 10x10x10 volume of data with the default figure colourmap,
+%    automatic contrast scaling, with 0.5% of total figure size padded around.
 % 
-%    volshow(DB(:).I);
-%                Show all volume fields .I in the struct array DB using the
-%                default figure colourmap, automatic contrast scaling per image,
-%                with 0.5% of total figure size padded between, and arranged as
-%                close to square as possible.
+%    >> volshow(I1, I2, I3, I4, hot, 0, [0,1], '4x1');
+%    Show volumes I1, I2, I3, I4 using the hot colourmap, with no space between
+%    contrast from 0 to 1, and in a horizontal line.
 % 
 % Jesse Knight 2016
 
 function varargout = volshow(varargin)
-% -- do not edit: MATLAB GUIDE 
+% -- do not edit: MATLAB GUIDE
 gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
@@ -121,15 +118,15 @@ try % if any errors: abort and give error (to ensure GUI closes)
         % patch size for the click
         elseif all(sizev == [1,3]) || all(sizev == [3,1])
             handles.patchsize = varargin{v};
+        % minmax (numerical)
+        elseif all(sizev == [1,2]) || all(sizev == [2,1])
+            handles.minmax = varargin{v};
         % pad value
         elseif all(sizev == [1,1])
             handles.pad = varargin{v};
         % minmax ([])
         elseif sizev(1) == 0
             handles.minmax = [];
-        % minmax (numerical)
-        elseif all(sizev == [1,2]) || all(sizev == [2,1])
-            handles.minmax = varargin{v};
         % colourmap
         elseif sizev(2) == 3
             handles.colourmap = varargin{v};
@@ -138,13 +135,15 @@ try % if any errors: abort and give error (to ensure GUI closes)
             warning(['Ignoring argument number ',num2str(v),'.']);
         end
     end
+    % quick error check: need an image volume to proceed
+    assert(size(handles.img,1) ~= 0,'Must give at least one 3D image volume.');
     % optimize display grid square-ish if not user specified
     handles.N = numel(handles.img) + ~isempty(handles.patchfcn);
     if ~all(isfield(handles,{'nSubx','nSuby'}))
       if handles.N ~= 3
         handles.nSubx = ceil(sqrt(handles.N));
         handles.nSuby = ceil(handles.N/handles.nSubx);
-      else % special case for 3 - just looks better
+      else % special case for 3: horizontal line - less awkward
         handles.nSubx = 3;
         handles.nSuby = 1;
       end
@@ -168,7 +167,7 @@ try % if any errors: abort and give error (to ensure GUI closes)
         handles.ax(end+1) = subplot(handles.nSuby,handles.nSubx,handles.N,...
           'xtick',[],'ytick',[]);
     end
-    % subplot spacing (separate for overlap issue)
+    % subplot spacing (separate loop since otherwise axes die if they overlap)
     for a = 1:handles.N
         y = ceil(a / handles.nSubx);
         x = mod(a, handles.nSubx);
@@ -192,14 +191,14 @@ try % if any errors: abort and give error (to ensure GUI closes)
     % render the middle frame of each volume to start
     imupdate(handles);
 % input argument parsing failed: exit (could be more graceful)
-catch
-    warning('Error during initialization. Maybe bad arguments.');
+catch ME
+    error(ME.getReport);
     handles.badcall = 1;
 end
 
 guidata(hObject, handles);
 
-% --- Outputs from this function are returned to the command line.
+% --- Outputs from this function are returned to the command line (none).
 function varargout = volshow_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 if handles.badcall
@@ -232,6 +231,7 @@ for i = 1:numel(handles.img)
                 handles.img(i).minmax,'parent',handles.ax(i));
     set(ha,'ButtonDownFcn',{@clickfcn,handles});
     % print the current frame number in the top left corner (red)
+    % comment this out if you want
     text(handles.img(i).textpos(2),handles.img(i).textpos(1),...
         num2str(handles.img(i).frame),'color','r','parent',handles.ax(i));
 end
@@ -239,7 +239,7 @@ colormap(handles.colourmap);
 
 % --- Executes on any button click function within axes.
 function clickfcn(hObject, ~, handles)
-% need to do anything?
+% need to do anything? (user supplied click function)
 if isempty(handles.patchfcn)  
     return
 end
@@ -251,10 +251,10 @@ for i = 1:numel(handles.img)
     end
 end
 % request the second click now that we know the calling axes
-% should go smoothly on double click
+% goes smoothly on double click
 [x,y] = ginput(1);
 z     = img.frame;
-% get the local patch coordinates and show the user
+% get the local patch coordinates and show the user the patch
 isize = img.size;
 yy = floor(max(1,        y - handles.patchsize(1)/2)) : ...
      floor(min(isize(1), y + handles.patchsize(1)/2));
@@ -275,8 +275,8 @@ end
 % try calling the user-specified function
 try
   handles.patchfcn(handles.ax(end), minmaxes, patches);
-catch ME
-  warning(['@patchfcn failed.',10,10,ME.getReport]);
+catch ME % you done goofed
+  error(ME.getReport);
 end
 % restore the images without patch highlighting
 imupdate(handles);
@@ -299,5 +299,5 @@ I2(yy(2:end-1),xx(2:end-1),:) = I2o;
 set(ax,'CData',I2);
 
 % --- Executes when user attempts to close volshow.
-function volshow_CloseRequestFcn(hObject, eventdata, handles)
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
 delete(hObject);
